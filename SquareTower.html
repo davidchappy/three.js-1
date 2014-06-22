@@ -48,7 +48,7 @@
 				// RENDERER
 				renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 				renderer.setSize(canvasWidth, canvasHeight);
-				renderer.setClearColorHex(0x33CCFF, 0.3);
+				renderer.setClearColor(0x33CCFF, 0.3);
 
 				var container = document.getElementById('container');
 				container.appendChild(renderer.domElement);
@@ -65,7 +65,7 @@
 				var material = new THREE.MeshPhongMaterial({color: color, opacity: 0.85, transparent: true});
 				var ka = 0.4;
 				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
-				var box = new THREE.Mesh(new THREE.CubeGeometry(squareSize * 2, 40, squareSize * 2), material);
+				var box = new THREE.Mesh(new THREE.BoxGeometry(squareSize * 2, 40, squareSize * 2), material);
 				box.position.y = squareHeight;
 				return box;
 			}
