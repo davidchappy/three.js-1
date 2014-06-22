@@ -78,16 +78,15 @@
 				scene.add(ambientLight);
 				scene.add(light);
 
-				var color = 0x00FF00;
-				for(i = 1; i < 11; i++){
-					color += i * 10000;
+				var color = new THREE.Color();
+				for (i = 1; i < 12; i++) {
+					color.r = Math.sin(.5 * i + 20);
+					color.g = Math.sin(.5 * i + 100);
+					color.b = Math.sin(.5 * i + 60);
 					var square = createSquare(i * 40, 400 - (i * 40), color);
+					square.rotation.y = i * 10 * Math.PI/180;
 					scene.add(square);
-				}
-
-				//Coordinates.drawGround({size:1000});
-				//Coordinates.drawGrid({size:1000,scale:0.01});
-				//Coordinates.drawAllAxes({axisLength:500,axisRadius:1,axisTess:4});
+				} 
 			}
 
 			function addToDOM() {
@@ -100,7 +99,7 @@
 			}
 
 			function animate() {
-				window.requestAnimationFrame(animate);
+				window.requestAnimationFrame(animate)
 				render();
 			}
 
