@@ -46,9 +46,9 @@
 				light.position.set(-800, 900, 300);
 
 				// RENDERER
-				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 				renderer.setSize(canvasWidth, canvasHeight);
-				renderer.setClearColorHex(0xAAAAAA, 1.0);
+				renderer.setClearColorHex(0x33CCFF, 0.3);
 
 				var container = document.getElementById('container');
 				container.appendChild(renderer.domElement);
@@ -62,7 +62,7 @@
 			}
 
 			function createSquare(squareSize, squareHeight, color) {
-				var material = new THREE.MeshLambertMaterial({color: color});
+				var material = new THREE.MeshPhongMaterial({color: color, opacity: 0.85, transparent: true});
 				var ka = 0.4;
 				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
 				var box = new THREE.Mesh(new THREE.CubeGeometry(squareSize * 2, 40, squareSize * 2), material);
@@ -87,7 +87,7 @@
 
 				//Coordinates.drawGround({size:1000});
 				//Coordinates.drawGrid({size:1000,scale:0.01});
-				Coordinates.drawAllAxes({axisLength:500,axisRadius:1,axisTess:4});
+				//Coordinates.drawAllAxes({axisLength:500,axisRadius:1,axisTess:4});
 			}
 
 			function addToDOM() {
