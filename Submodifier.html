@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Box and Ball</title>
+		<title>Submodifier</title>
 		<meta name="author" content="Paige Hinkle">
 		
 		<style>
@@ -12,6 +12,7 @@
 		</style>
 
 		<script src="lib/three.min.js"></script>
+		<script src= "lib/SubdivisionModifier"></script>
 		<script src="lib/OrbitAndPanControls.js"></script>
 		<script src="lib/jquery-1.8.3.min.js"></script>
 		<script src="lib/Detector.js"></script>
@@ -35,14 +36,14 @@
 
 				// CAMERA
 				camera = new THREE.PerspectiveCamera(45, canvasRatio, 1, 80000);
-				camera.position.set(200, 300, -1000);
+				camera.position.set(-300, 300, -1000);
 				camera.lookAt(0,0,0);
 				
 				// LIGHTS
 				ambientLight = new THREE.AmbientLight(0xFFFFFF);
 
 				light = new THREE.DirectionalLight(0xFFFFFF, 0.7);
-				light.position.set(-300, 500, -300);
+				light.position.set(-800, 900, 300);
 
 				// RENDERER
 				renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -60,33 +61,49 @@
 				cameraControls.target.set(0, 0, 0);
 			}
 
-			function createBall() {
-				var material = new THREE.MeshLambertMaterial({color: 0xCC3399});
-				var ka = 0.4;
-				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
-				var sphere = new THREE.Mesh(new THREE.SphereGeometry(150, 64, 32), material);
-				sphere.position.y = 150;
-				sphere.position.x = 250;
-				return sphere;
-			}
 
 			function createBox() {
 				var material = new THREE.MeshLambertMaterial({color: 0x0066FF});
 				var ka = 0.4;
 				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
-				var box = new THREE.Mesh(new THREE.BoxGeometry(300, 300, 300), material);
+				var geometry = new THREE.BoxGeometry(300, 300, 300)
+				var box = new THREE.Mesh(geometry, material);
 				box.position.y = 150;
-				box.position.x = -250;
-				return box;
-			}
 
-			function createGround() {
-				var material = new THREE.MeshLambertMaterial({color: 0xEEFDFF});
-				var ka = 0.4;
-				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
-				var ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), material);
-				ground.rotation.x = - Math.PI / 2;
-				return ground;
+				var smooth = geometry.clone(box);
+				smooth.mergeVertices();
+				smooth.computeFaceNormals();
+				smooth.computeVertexNormals();
+
+				var modifier = new THREE.SubdivisionModifier(5);
+				modifier.modify(geometry);
+
+				var faceABCD = "abcd";
+				var color, f, p, n, vertexIndex;
+
+				for ( i = 0; i < smooth.faces.length; i ++ ) {
+
+					f  = smooth.faces[ i ];
+
+
+					n = ( f instanceof THREE.Face3 ) ? 3 : 4;
+
+					for( var j = 0; j < n; j++ ) {
+
+						vertexIndex = f[ faceABCD.charAt( j ) ];
+
+						p = smooth.vertices[ vertexIndex ];
+
+						color = new THREE.Color( 0xffffff );
+						color.setHSL( ( p.y ) / 200 + 0.5, 1.0, 0.5 );
+
+						f.vertexColors[ j ] = color;
+
+					}
+
+				}
+
+				return box;
 			}
 
 			function fillScene() {
@@ -97,19 +114,11 @@
 				scene.add(ambientLight);
 				scene.add(light);
 
-				var ball = createBall();
-				scene.add(ball);
-
 				var box = createBox();
 				scene.add(box);
 
-				var ground = createGround();
-				scene.add(ground);
-
-				//Add grid if desired
-				//Coordinates.drawGround({size:1000});
-				//Coordinates.drawGrid({size:1000,scale:0.01});
-				//Coordinates.drawAllAxes({axisLength:500,axisRadius:1,axisTess:4});
+				Coordinates.drawGround({size:1000});
+				Coordinates.drawGrid({size:1000,scale:0.01});
 			}
 
 			function addToDOM() {

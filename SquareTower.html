@@ -11,13 +11,14 @@
 			}
 		</style>
 
-		<script src="js/three.min.js"></script>
-		<script src="js/OrbitAndPanControls.js"></script>
-		<script src="js/jquery-1.8.3.min.js"></script>
-		<script src="js/Detector.js"></script>
-		<script src="js/Coordinates.js"></script>
-		<script src="js/stats.min.js"></script>
-		<script src="js/dat.gui.min.js"></script>
+		<script src="lib/three.min.js"></script>
+		<script src="lib/OrbitAndPanControls.js"></script>
+		<script src="lib/jquery-1.8.3.min.js"></script>
+		<script src="lib/Detector.js"></script>
+		<script src="lib/Coordinates.js"></script>
+		<script src="lib/stats.min.js"></script>
+		<script src="lib/SubdivisionModifier"></script>
+
 	</head>
 	<body>
 		<div id="container">
@@ -65,10 +66,17 @@
 				var material = new THREE.MeshPhongMaterial({color: color, opacity: 0.85, transparent: true});
 				var ka = 0.4;
 				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
-				var box = new THREE.Mesh(new THREE.BoxGeometry(squareSize * 2, 40, squareSize * 2), material);
-				box.position.y = squareHeight;
-				return box;
+				var geometry = new THREE.BoxGeometry(squareSize * 2, 40, squareSize * 2);
+				var square = new THREE.Mesh(geometry, material);
+				square.position.y = squareHeight;
+
+				// This is wrong.
+				//var modifier = new THREE.SubdivisionModifier(1);
+				//modifier.modify(geometry);
+				return square;
 			}
+
+			var tower;
 
 			function fillScene() {
 				scene = new THREE.Scene();
@@ -78,6 +86,8 @@
 				scene.add(ambientLight);
 				scene.add(light);
 
+				tower = new THREE.Object3D();
+
 				var color = new THREE.Color();
 				for (i = 1; i < 12; i++) {
 					color.r = Math.sin(.5 * i + 20);
@@ -85,8 +95,10 @@
 					color.b = Math.sin(.5 * i + 60);
 					var square = createSquare(i * 40, 400 - (i * 40), color);
 					square.rotation.y = i * 10 * Math.PI/180;
-					scene.add(square);
-				} 
+					tower.add(square);
+				}
+
+				scene.add(tower);
 			}
 
 			function addToDOM() {
@@ -99,7 +111,8 @@
 			}
 
 			function animate() {
-				window.requestAnimationFrame(animate)
+				tower.rotation.y += Math.PI/180/5;
+				window.requestAnimationFrame(animate);
 				render();
 			}
 

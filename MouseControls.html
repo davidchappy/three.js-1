@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Box and Ball</title>
+		<title>Mouse Controls</title>
 		<meta name="author" content="Paige Hinkle">
 		
 		<style>
@@ -27,6 +27,9 @@
 			var cameraControls;
 			var clock = new THREE.Clock();
 			var ambientLight, light;
+			var projector, mouse = { x: 0, y: 0 };
+			var hoverObj;
+			var objects = [];
 
 			function init() {
 				var canvasWidth = window.innerWidth;
@@ -42,7 +45,7 @@
 				ambientLight = new THREE.AmbientLight(0xFFFFFF);
 
 				light = new THREE.DirectionalLight(0xFFFFFF, 0.7);
-				light.position.set(-300, 500, -300);
+				light.position.set(-200, 500, -300);
 
 				// RENDERER
 				renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -58,12 +61,40 @@
 				// CONTROLS
 				cameraControls = new THREE.OrbitAndPanControls(camera, renderer.domElement);
 				cameraControls.target.set(0, 0, 0);
+
+				// PROJECTOR
+				projector = new THREE.Projector();
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+			}
+
+			function onDocumentMouseMove(event) {
+				event.preventDefault();
+
+				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+			}
+
+			function onDocumentMouseDown(event) {
+
+				event.preventDefault();
+
+				var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+				projector.unprojectVector( vector, camera );
+
+				var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+				var intersects = raycaster.intersectObjects(objects);
+
+				if ( intersects.length > 0 ) {
+					setAmbientColor(intersects[0].object.material, 0x10FA08);
+				}
 			}
 
 			function createBall() {
-				var material = new THREE.MeshLambertMaterial({color: 0xCC3399});
-				var ka = 0.4;
-				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var material = new THREE.MeshLambertMaterial();
+				setAmbientColor(material, 0xCC3399);
 				var sphere = new THREE.Mesh(new THREE.SphereGeometry(150, 64, 32), material);
 				sphere.position.y = 150;
 				sphere.position.x = 250;
@@ -71,9 +102,8 @@
 			}
 
 			function createBox() {
-				var material = new THREE.MeshLambertMaterial({color: 0x0066FF});
-				var ka = 0.4;
-				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var material = new THREE.MeshLambertMaterial();
+				setAmbientColor(material, 0x0066FF);
 				var box = new THREE.Mesh(new THREE.BoxGeometry(300, 300, 300), material);
 				box.position.y = 150;
 				box.position.x = -250;
@@ -81,9 +111,8 @@
 			}
 
 			function createGround() {
-				var material = new THREE.MeshLambertMaterial({color: 0xEEFDFF});
-				var ka = 0.4;
-				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var material = new THREE.MeshLambertMaterial();
+				setAmbientColor(material, 0xEEFDFF);
 				var ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), material);
 				ground.rotation.x = - Math.PI / 2;
 				return ground;
@@ -97,19 +126,54 @@
 				scene.add(ambientLight);
 				scene.add(light);
 
+				// BALL
 				var ball = createBall();
 				scene.add(ball);
+				objects.push(ball);
 
+				// BOX
 				var box = createBox();
 				scene.add(box);
+				objects.push(box);
 
+				// GROUND
 				var ground = createGround();
 				scene.add(ground);
+				objects.push(ground);
+			}
 
-				//Add grid if desired
-				//Coordinates.drawGround({size:1000});
-				//Coordinates.drawGrid({size:1000,scale:0.01});
-				//Coordinates.drawAllAxes({axisLength:500,axisRadius:1,axisTess:4});
+			function update() {
+				var vector = new THREE.Vector3(mouse.x, mouse.y, 1);
+				projector.unprojectVector(vector, camera);
+				var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+				// Can use scene.children to get all objects in the scene
+				var intersects = raycaster.intersectObjects(objects);
+
+				if (intersects.length > 0) {
+					if (intersects[ 0 ].object != hoverObj) {
+						if (hoverObj) {
+							setAmbientColor(hoverObj.material, hoverObj.currentHex);
+						}
+						// store reference to closest object as current intersection object
+						hoverObj = intersects[0].object;
+						hoverObj.currentHex = hoverObj.material.color.getHex();
+						setAmbientColor(hoverObj.material, 0xFA0820);
+					}
+				} 
+				else {
+					if (hoverObj) {
+						setAmbientColor(hoverObj.material, hoverObj.currentHex);
+					}
+					hoverObj = null;
+				}
+				cameraControls.update();
+			}
+
+			function setAmbientColor(material, color) {
+				var ka = 0.4;
+				material.color.setHex(color);
+				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
 			}
 
 			function addToDOM() {
@@ -124,6 +188,7 @@
 			function animate() {
 				window.requestAnimationFrame(animate);
 				render();
+				update();
 			}
 
 			function render() {
