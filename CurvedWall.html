@@ -1,0 +1,200 @@
+<html>
+	<head>
+		<title>Ayo</title>
+		<meta name="author" content="Paige Hinkle">
+		
+		<style>
+			body {
+				font-family: Monospace;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+
+		<script src="lib/three.min.js"></script>
+		<script src="lib/OrbitAndPanControls.js"></script>
+		<script src="lib/jquery-1.8.3.min.js"></script>
+		<script src="lib/Detector.js"></script>
+		<script src="lib/Coordinates.js"></script>
+		<script src="lib/dat.gui.min.js"></script>
+		<script src="fonts/helvetiker_regular.typeface.js"></script>
+	</head>
+	<body>
+		<div id="container">
+		</div>
+
+		<script>
+			var camera, scene, renderer;
+			var cameraControls;
+			var clock = new THREE.Clock();
+			var ambientLight, light;
+
+			function init() {
+				var canvasWidth = window.innerWidth;
+				var canvasHeight = window.innerHeight;
+				var canvasRatio = canvasWidth / canvasHeight;
+
+				// CAMERA
+				camera = new THREE.PerspectiveCamera(45, canvasRatio, 1, 80000);
+				camera.position.set(25, 20, -45);
+				camera.lookAt(0,0,0);
+				camera.eulerOrder = "YXZ";
+				
+				// LIGHTS
+				ambientLight = new THREE.AmbientLight(0xFFFFFF);
+
+				light = new THREE.SpotLight( 0xFFFFFF );
+  				light.position.set( -30, 120, 40 );
+  				light.angle = 45 * Math.PI / 180;
+
+				// RENDERER
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setSize(canvasWidth, canvasHeight);
+				renderer.setClearColor(0xAAAAAA, 1.0);
+
+				var container = document.getElementById('container');
+				container.appendChild(renderer.domElement);
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+
+				// CONTROLS
+				cameraControls = new THREE.OrbitAndPanControls(camera, renderer.domElement);
+				cameraControls.target.set(0, 17, 0);
+				//cameraControls.maxDistance  = cameraControls.minDistance = 50;
+			}
+
+			function createGround() {
+				var material = new THREE.MeshLambertMaterial({color: 0x563701});
+				var ka = 0.4;
+				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var ground = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000), material);
+				ground.rotation.x = - Math.PI / 2;
+				return ground;
+			}
+
+			function createWall() {
+				geometry = new THREE.BoxGeometry(600, 300, 600);
+			    material = new THREE.MeshLambertMaterial({
+			        color: 0xFFEECE,
+			        side: THREE.DoubleSide
+			    });
+			    var ka = 0.4;
+				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+
+			    mesh = new THREE.Mesh(geometry, material);
+			    return mesh;
+			}
+
+			function createFloor() {
+				var wood = new THREE.ImageUtils.loadTexture("img/wood3.jpg");
+				wood.wrapS = wood.wrapT = THREE.RepeatWrapping;
+				wood.repeat.set( 5, 5);
+			
+				var material = new THREE.MeshLambertMaterial({map: wood});
+				var ka = 0.4;
+				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000, 10, 10), material);
+				ground.position.y = -37;
+				ground.rotation.x = - Math.PI / 2;
+				return ground;
+			}
+
+			function createTitle() {
+				var material = new THREE.MeshLambertMaterial({color: 0x000000});
+				var ka = 0.4;
+				material.ambient.setRGB(material.color.r * ka, material.color.g * ka, material.color.b * ka);
+				var geometry = new THREE.TextGeometry("Paige Hinkle", {font: 'helvetiker', 
+				    curveSegments: 100, size: 4, height: 1});
+				var text = new THREE.Mesh(geometry, material);
+				text.rotation.y = Math.PI;
+				text.position.x = 25;
+				text.position.y = 20;
+				text.position.z = 70;
+				return text;
+			}
+
+			function createFrames() {
+
+
+			}
+
+			function fillScene() {
+				scene = new THREE.Scene();
+				scene.fog = new THREE.Fog(0x808080, 2000, 4000);
+
+				// LIGHTS
+				scene.add(ambientLight);
+				scene.add(light);
+
+				var mesh = createWall();
+			    scene.add(mesh);
+
+			    var floor = createFloor();
+			    scene.add(floor);
+
+			    //var title = createTitle();
+			    //scene.add(title);
+
+			}
+
+			function update() {
+				
+			}
+
+			function addToDOM() {
+				var container = document.getElementById('container');
+				var canvas = container.getElementsByTagName('canvas');
+				if (canvas.length>0) {
+					container.removeChild(canvas[0]);
+				}
+				container.appendChild(renderer.domElement);
+			}
+
+			function animate() {
+				window.requestAnimationFrame(animate);
+				render();
+				update();
+			}
+
+			function render() {
+				var delta = clock.getDelta();
+				cameraControls.update(delta);
+
+				renderer.render(scene, camera);
+			}
+
+			const LEFT = 37;
+			const UP = 38;
+			const RIGHT = 39;
+			const DOWN = 40;
+
+			document.onkeydown = function() {
+			    switch (window.event.keyCode) {
+			        case LEFT:
+			            //alert('left');
+			            break;
+			        case UP:
+			            //alert('up');
+			            break;
+			        case RIGHT:
+			            //alert('right');
+			            break;
+			        case DOWN:
+			            //alert('down');
+			            break;
+			    }
+			};
+
+			try {
+				init();
+				fillScene();
+				addToDOM();
+				animate();
+			} catch(e) {
+				var errorReport = "Your program encountered an unrecoverable error, can not draw on canvas. Error was:<br/><br/>";
+				$('#container').append(errorReport+e);
+			}
+		</script>
+	</body>
+</html>
